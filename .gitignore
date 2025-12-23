@@ -34,4 +34,4 @@ yarn-debug.log
 yarn-error.log
 
 # PHPUnit results
-# .phpunit.result.cache
+.phpunit.result.cache
