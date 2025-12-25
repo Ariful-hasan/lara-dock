@@ -1,0 +1,35 @@
+server {
+    listen 80;
+    index index.php index.html;
+    root /var/www/html/public; # Standard Laravel entry
+
+    # --- ADD THESE HERE ---
+    keepalive_timeout 65;
+    keepalive_requests ${PHP_FPM_NGINX_MAX_REQUESTS};
+    # ----------------------
+
+    client_max_body_size 32m;
+    tcp_nopush on;
+    tcp_nodelay on;
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        # Standard Docker linking to your 'app' service
+        fastcgi_pass app:${PHP_FPM_PORT};
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+
+        # Optimization: increase timeouts for heavy Laravel tasks
+        fastcgi_read_timeout 300;
+
+        # Note: To keep the connection alive specifically between Nginx and PHP-FPM,
+        # you would usually need an 'upstream' block, but for standard Docker
+        # setups, the settings above handle the main traffic flow perfectly.
+    }
+}
