@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+
+  # 2. Nginx Web Server
+  web:
+    image: nginx:alpine
+    container_name: web
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      - PHP_FPM_NGINX_MAX_REQUESTS=${PHP_FPM_NGINX_MAX_REQUESTS}
+      - PHP_FPM_PORT=${PHP_FPM_PORT}
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+    networks:
+      - api-network
+
+  # 1. PHP-FPM Application
+  app:
+    image: app:latest
+    container_name: app
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        - USER_ID=${USER_ID:-1000}
+        - GROUP_ID=${GROUP_ID:-1000}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/var/www/html
+    networks:
+      - api-network
+    environment:
+      - APP_ENV=${APP_ENV}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - PHP_OPCACHE_VALIDATE_TIMESTAMPS=${PHP_OPCACHE_VALIDATE_TIMESTAMPS}
+      - PHP_OPCACHE_REVALIDATE_FREQ=${PHP_OPCACHE_REVALIDATE_FREQ}
+      - PHP_FPM_NGINX_MAX_REQUESTS=${PHP_FPM_NGINX_MAX_REQUESTS}
+      - PHP_FPM_PORT=${PHP_FPM_PORT}
+      - DB_CONNECTION=${DB_CONNECTION}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+    healthcheck:
+      test: ["CMD", "cgi-fcgi", "-bind", "-connect", "127.0.0.1:${PHP_FPM_PORT}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+
+  # 3. MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: db
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - api-network
+
+  # 4. Redis
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - api-network
+    # no need environment section as we're setting password + port via command
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      # The healthcheck needs the password too, or it will fail!
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  api-network:
+    driver: bridge
+
+volumes:
+  db_data:
+  redis_data:

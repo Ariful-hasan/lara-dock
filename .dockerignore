@@ -1,0 +1,20 @@
+# Local dependencies
+node_modules/
+vendor/
+
+# Environment and secrets
+.env
+.env.backup
+
+# Laravel specific (keep the heavy/sensitive stuff out)
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+
+# Git and OS files
+.git/
+.DS_Store
+
+# REMOVE or comment out 'docker/' so the builder can see your scripts!
+# docker/
