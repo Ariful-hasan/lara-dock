@@ -38,6 +38,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./docker/Dockerfile
           push: true
           # We tag it with the manual input OR 'latest' if run automatically
           tags: |
