@@ -11,8 +11,8 @@ on:
         default: 'latest'
 
   # 2. Automatic Trigger (on every push to main)
-  push:
-    branches: [ "master" ]
+  # push:
+  #   branches: [ "master" ]
 
 jobs:
   build-and-push:
@@ -46,7 +46,9 @@ jobs:
       # Run the tests INSIDE the image we just built
       - name: Run tests in container
         run: |
-          docker run --rm app:test php artisan test
+          docker run --rm \
+            -e APP_ENV=testing \
+            app:test php artisan test
 
       # Build and Push the image
       - name: Build and Push laradock App
