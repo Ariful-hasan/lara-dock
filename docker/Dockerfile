@@ -3,7 +3,7 @@ FROM composer:2 AS vendor
 WORKDIR /app
 # We copy from the root's code perspective
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+RUN composer install --optimize-autoloader --no-interaction --no-scripts
 
 # STAGE 2: Final Production Image
 FROM php:8.4-fpm-alpine
