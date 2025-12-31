@@ -103,6 +103,19 @@ services:
       timeout: 5s
       retries: 3
 
+  # The Background Worker
+  worker:
+    image: app:latest # Reuses the image built by the app service
+    container_name: worker
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    # This overrides the default 'php-fpm' command from the Dockerfile
+    command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=90
+    depends_on:
+      redis:
+        condition: service_healthy
+
 networks:
   api-network:
     driver: bridge
