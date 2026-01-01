@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laradock-worker-deployment
+spec:
+  replicas: 1 # You can scale this up if your queue gets big
+  selector:
+    matchLabels:
+      app: laradock-worker
+  template:
+    metadata:
+      labels:
+        app: laradock-worker
+    spec:
+      containers:
+      - name: worker
+        image: ariful92/laradock:${VERSION}
+        # THIS IS THE KEY: It overrides the default container start command
+        command: ["php", "artisan", "queue:work", "--verbose", "--tries=3", "--timeout=90"]
+        envFrom:
+        - configMapRef:
+            name: laradock-app-config
+        - secretRef:
+            name: laradock-app-secrets
