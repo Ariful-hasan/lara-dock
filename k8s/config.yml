@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: laradock-app-config
+data:
+  # App Environment
+  APP_ENV: "development"
+  APP_DEBUG: "false"
+  APP_URL: "http://localhost" # No port needed if using Ingress on port 80
+  APP_LOCALE: "en"
+  APP_FALLBACK_LOCALE: "en"
+  APP_FAKER_LOCALE: "en_US"
+
+  # Maintenance & Drivers
+  APP_MAINTENANCE_DRIVER: "file"
+  BCRYPT_ROUNDS: "12"
+
+  # Logging
+  LOG_CHANNEL: "stack"
+  LOG_STACK: "single"
+  LOG_LEVEL: "debug"
+  LOG_DEPRECATIONS_CHANNEL: "null"
+
+  FILESYSTEM_DISK: "local"
+  QUEUE_CONNECTION: "redis"
+
+  # Database (Matches your 'db' Service name)
+  DB_DATABASE: "laradock_db"
+  DB_USERNAME: "root"
+  DB_CONNECTION: "mysql"
+  DB_HOST: "db"          # Matches your MySQL Service name
+  DB_PORT: "3306"
+
+  # Redis (Matches your 'redis' Service name)
+  REDIS_CLIENT: "phpredis"
+  CACHE_STORE: "redis"
+  REDIS_HOST: "redis"    # Matches your Redis Service name
+  REDIS_PORT: "6379"
+
+  # PHP-FPM & Nginx Specifics (The ones you asked about)
+  PHP_FPM_PORT: "9000"
+  PHP_FPM_NGINX_MAX_REQUESTS: "500"
+  PHP_OPCACHE_VALIDATE_TIMESTAMPS: "0" # Best for Production
+  PHP_OPCACHE_REVALIDATE_FREQ: "60"

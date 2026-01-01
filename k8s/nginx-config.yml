@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  laravel.conf: |
+    server {
+        listen 80;
+        index index.php index.html;
+        # This should match the WORKDIR in your PHP Dockerfile
+        root /var/www/html/public;
+
+        location / {
+            try_files $uri $uri/ /index.php?$query_string;
+        }
+
+        location ~ \.php$ {
+            # In a Pod, containers share localhost. Port 9000 is your PHP-FPM.
+            fastcgi_pass 127.0.0.1:9000;
+            fastcgi_index index.php;
+            include fastcgi_params;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        }
+    }

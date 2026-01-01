@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laravel-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: laradock
+  template:
+    metadata:
+      labels:
+        app: laradock
+    spec:
+      containers:
+      # 1. The PHP-FPM Container
+      - name: php-app
+        image: ariful92/laradock:${VERSION}
+        imagePullPolicy: IfNotPresent
+      # Injecting all variables from our ConfigMap and Secret
+        envFrom:
+        - configMapRef:
+            name: laradock-app-config
+        - secretRef:
+            name: laradock-app-secrets
+
+      # 2. The Nginx Sidecar Container
+      - name: nginx
+        image: nginx:alpine
+
+        # The port your container is listening on (Nginx/Apache)
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-conf-vol
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+      volumes:
+      - name: nginx-conf-vol
+        configMap:
+          name: nginx-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: laradock-app
+spec:
+  selector:
+    app: laradock # This MUST match the Deployment selector
+  ports:
+    - protocol: TCP
+      port: 80       # Port accessed by the Ingress or other pods
+      targetPort: 80 # Port inside the container (matches containerPort)
